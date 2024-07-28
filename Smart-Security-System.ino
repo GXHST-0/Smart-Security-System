@@ -60,3 +60,26 @@ void loop() {
   }
 }
 
+void sendDataToServer(bool motion, bool sound) {
+  WiFiClient client;
+  
+  StaticJsonDocument<200> doc;
+  doc["motion"] = motion;
+  doc["sound"] = sound;
+
+  String jsonString;
+  serializeJson(doc, jsonString);
+
+  if (client.connect("192.168.1.100", 5000)) { //Change to your IP-adress
+    client.println("POST /sensor HTTP/1.1");
+    client.println("Host: 192.168.1.100"); //Change to your IP-adress
+    client.println("Content-Type: application/json");
+    client.print("Content-Length: ");
+    client.println(jsonString.length());
+    client.println();
+    client.println(jsonString);
+  } else {
+    Serial.println("Connection failed");
+  }
+  client.stop();
+}
