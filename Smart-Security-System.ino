@@ -14,7 +14,6 @@
  This code is in the public domain.
  */
 
-#include <SPI.h>
 #include <WiFiNINA.h>
 #include <ArduinoJson.h>
 
@@ -33,9 +32,6 @@ WiFiClient client;
 // server address:
 char server[] = "example.org";
 //IPAddress server(64,131,82,241);
-
-unsigned long lastConnectionTime = 0;            // last time you connected to the server, in milliseconds
-const unsigned long postingInterval = 10L * 1000L; // delay between updates, in milliseconds
 
 void setup() {
   Serial.begin(115200);
@@ -64,44 +60,3 @@ void loop() {
   }
 }
 
-// this method makes a HTTP connection to the server:
-void httpRequest() {
-  // close any connection before send a new request.
-  // This will free the socket on the NINA module
-  client.stop();
-
-  // if there's a successful connection:
-  if (client.connect(server, 80)) {
-    Serial.println("connecting...");
-    // send the HTTP GET request:
-    client.println("GET / HTTP/1.1");
-    client.println("Host: example.org");
-    client.println("User-Agent: ArduinoWiFi/1.1");
-    client.println("Connection: close");
-    client.println();
-
-    // note the time that the connection was made:
-    lastConnectionTime = millis();
-  } else {
-    // if you couldn't make a connection:
-    Serial.println("connection failed");
-  }
-}
-
-
-void printWifiStatus() {
-  // print the SSID of the network you're attached to:
-  Serial.print("SSID: ");
-  Serial.println(WiFi.SSID());
-
-  // print your board's IP address:
-  IPAddress ip = WiFi.localIP();
-  Serial.print("IP Address: ");
-  Serial.println(ip);
-
-  // print the received signal strength:
-  long rssi = WiFi.RSSI();
-  Serial.print("signal strength (RSSI):");
-  Serial.print(rssi);
-  Serial.println(" dBm");
-}
