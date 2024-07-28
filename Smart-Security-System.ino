@@ -38,36 +38,20 @@ unsigned long lastConnectionTime = 0;            // last time you connected to t
 const unsigned long postingInterval = 10L * 1000L; // delay between updates, in milliseconds
 
 void setup() {
-  //Initialize serial and wait for port to open:
-  Serial.begin(9600);
-  while (!Serial) {
-    ; // wait for serial port to connect. Needed for native USB port only
-  }
-
-  // check for the WiFi module:
+  Serial.begin(115200);
+  pinMode(pirPin, INPUT);
+  pinMode(soundPin, INPUT);
+  
   if (WiFi.status() == WL_NO_MODULE) {
     Serial.println("Communication with WiFi module failed!");
-    // don't continue
     while (true);
   }
 
-  String fv = WiFi.firmwareVersion();
-  if (fv < WIFI_FIRMWARE_LATEST_VERSION) {
-    Serial.println("Please upgrade the firmware");
+  while (WiFi.begin(ssid, pass) != WL_CONNECTED) {
+    delay(1000);
+    Serial.println("Connecting to WiFi...");
   }
-
-  // attempt to connect to WiFi network:
-  while (status != WL_CONNECTED) {
-    Serial.print("Attempting to connect to SSID: ");
-    Serial.println(ssid);
-    // Connect to WPA/WPA2 network. Change this line if using open or WEP network:
-    status = WiFi.begin(ssid, pass);
-
-    // wait 10 seconds for connection:
-    delay(10000);
-  }
-  // you're connected now, so print out the status:
-  printWifiStatus();
+  Serial.println("Connected to WiFi");
 }
 
 void loop() {
