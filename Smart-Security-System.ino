@@ -55,20 +55,13 @@ void setup() {
 }
 
 void loop() {
-  // if there's incoming data from the net connection.
-  // send it out the serial port.  This is for debugging
-  // purposes only:
-  while (client.available()) {
-    char c = client.read();
-    Serial.write(c);
-  }
+  bool motionDetected = digitalRead(pirPin) == HIGH;
+  bool soundDetected = digitalRead(soundPin) == HIGH;
 
-  // if ten seconds have passed since your last connection,
-  // then connect again and send data:
-  if (millis() - lastConnectionTime > postingInterval) {
-    httpRequest();
+  if (motionDetected || soundDetected) {
+    sendDataToServer(motionDetected, soundDetected);
+    delay(60000);  // Wait 1 minute before sending
   }
-
 }
 
 // this method makes a HTTP connection to the server:
