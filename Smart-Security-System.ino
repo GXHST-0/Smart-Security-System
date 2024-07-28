@@ -64,44 +64,26 @@ void loop() {
   }
 }
 
-// this method makes a HTTP connection to the server:
-void httpRequest() {
-  // close any connection before send a new request.
-  // This will free the socket on the NINA module
-  client.stop();
+void sendDataToServer(bool motion, bool sound) {
+  WiFiClient client;
+  
+  StaticJsonDocument<200> doc;
+  doc["motion"] = motion;
+  doc["sound"] = sound;
 
-  // if there's a successful connection:
-  if (client.connect(server, 80)) {
-    Serial.println("connecting...");
-    // send the HTTP GET request:
-    client.println("GET / HTTP/1.1");
-    client.println("Host: example.org");
-    client.println("User-Agent: ArduinoWiFi/1.1");
-    client.println("Connection: close");
+  String jsonString;
+  serializeJson(doc, jsonString);
+
+  if (client.connect("192.168.1.100", 5000)) { //Change to your IP-adress
+    client.println("POST /sensor HTTP/1.1");
+    client.println("Host: 192.168.1.100"); //Change to your IP-adress
+    client.println("Content-Type: application/json");
+    client.print("Content-Length: ");
+    client.println(jsonString.length());
     client.println();
-
-    // note the time that the connection was made:
-    lastConnectionTime = millis();
+    client.println(jsonString);
   } else {
-    // if you couldn't make a connection:
-    Serial.println("connection failed");
+    Serial.println("Connection failed");
   }
-}
-
-
-void printWifiStatus() {
-  // print the SSID of the network you're attached to:
-  Serial.print("SSID: ");
-  Serial.println(WiFi.SSID());
-
-  // print your board's IP address:
-  IPAddress ip = WiFi.localIP();
-  Serial.print("IP Address: ");
-  Serial.println(ip);
-
-  // print the received signal strength:
-  long rssi = WiFi.RSSI();
-  Serial.print("signal strength (RSSI):");
-  Serial.print(rssi);
-  Serial.println(" dBm");
+  client.stop();
 }
