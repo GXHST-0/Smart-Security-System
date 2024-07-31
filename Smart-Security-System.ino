@@ -23,10 +23,18 @@ char pass[] = "tas29qat21";
 const int pirPin = 2;
 const int soundPin = 4;
 
+// Adjusting these values will change sensor sensitivity
+// Higher values make the sensors less sensitive
+const int soundThreshold = 180; //needed adjustment from 100 to 180
+const int motionThreshold = 5;  // no adjustment needed
+
 WiFiClient client;
 
 char server[] = "192.168.0.40";  // Your server's IP address
 int port = 5000;  // Your server's port
+
+unsigned long lastSendTime = 0;
+const unsigned long sendInterval = 10000;  // Send data every 10 seconds
 
 void setup() {
   Serial.begin(115200);
@@ -41,17 +49,38 @@ void setup() {
 }
 
 void loop() {
-  bool motionDetected = digitalRead(pirPin) == HIGH;
-  bool soundDetected = digitalRead(soundPin) == HIGH;
+  int motionLevel = 0;
+  for (int i = 0; i < 10; i++) {  // Take average of 10 readings
+    motionLevel += digitalRead(pirPin);
+    delay(10);
+  }
+  bool motionDetected = motionLevel >= motionThreshold;
+  
+  int soundLevel = analogRead(soundPin);
+  bool soundDetected = soundLevel > soundThreshold;
 
-  sendDataToServer(motionDetected, soundDetected);
-  delay(5000);  // Wait 1 minute before sending again
+  Serial.print("Motion Level: ");
+  Serial.print(motionLevel);
+  Serial.print(" | Motion: ");
+  Serial.print(motionDetected ? "Detected" : "Not Detected");
+  Serial.print(" | Sound Level: ");
+  Serial.print(soundLevel);
+  Serial.print(" | Sound: ");
+  Serial.println(soundDetected ? "Detected" : "Not Detected");
+
+  unsigned long currentTime = millis();
+  if (currentTime - lastSendTime >= sendInterval) {
+    sendDataToServer(motionDetected, soundDetected);
+    lastSendTime = currentTime;
+  }
 
   // Check WiFi connection and reconnect if necessary
   if (WiFi.status() != WL_CONNECTED) {
     Serial.println("WiFi connection lost. Reconnecting...");
     connectToWiFi();
   }
+
+  delay(1000);  // Wait for 1 second before next reading
 }
 
 void connectToWiFi() {
